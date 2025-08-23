@@ -1,9 +1,17 @@
 // File: components/PostCard.tsx
 'use client';
 
-import React from 'react';
-import { Camera, MessageSquare, Video, Clock, Edit3, Trash2, Eye } from 'lucide-react';
 import { ScheduledPost } from '@/types';
+import {
+  Camera,
+  Clock,
+  Edit3,
+  Eye,
+  MessageSquare,
+  Trash2,
+  Video,
+} from 'lucide-react';
+import React from 'react';
 import { Button } from './ui/Button';
 
 interface PostCardProps {
@@ -22,11 +30,11 @@ export const PostCard: React.FC<PostCardProps> = ({
   const getTypeIcon = () => {
     switch (post.type) {
       case 'post':
-        return <Camera className="text-blue-500" size={16} />;
+        return <Camera className='text-purple-500' size={16} />;
       case 'story':
-        return <MessageSquare className="text-green-500" size={16} />;
+        return <MessageSquare className='text-green-500' size={16} />;
       case 'reel':
-        return <Video className="text-purple-500" size={16} />;
+        return <Video className='text-purple-500' size={16} />;
     }
   };
 
@@ -35,7 +43,7 @@ export const PostCard: React.FC<PostCardProps> = ({
       case 'published':
         return 'bg-green-100 text-green-800';
       case 'scheduled':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-purple-100 text-purple-800';
       case 'draft':
         return 'bg-gray-100 text-gray-800';
       case 'failed':
@@ -44,56 +52,43 @@ export const PostCard: React.FC<PostCardProps> = ({
   };
 
   return (
-    <div className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-      <div className="flex justify-between items-start mb-2">
-        <div className="flex items-center space-x-2">
+    <div className='rounded-lg border p-4 transition-colors'>
+      <div className='mb-2 flex items-start justify-between'>
+        <div className='flex items-center space-x-2'>
           {getTypeIcon()}
-          <span className="font-medium">{post.topic}</span>
-          <span className={`text-xs px-2 py-1 rounded ${getStatusColor()}`}>
+          <span className='font-medium'>{post.topic}</span>
+          <span className={`rounded px-2 py-1 text-xs ${getStatusColor()}`}>
             {post.status}
           </span>
         </div>
-        <div className="flex items-center space-x-2">
-          <Clock size={14} className="text-gray-400" />
-          <span className="text-sm text-white">{post.time}</span>
+        <div className='flex items-center space-x-2'>
+          <Clock size={14} className='text-gray-400' />
+          <span className='text-sm text-white'>{post.time}</span>
         </div>
       </div>
 
-      <p className="text-sm text-white mb-2 line-clamp-2">
-        {post.script}
-      </p>
+      <p className='mb-2 line-clamp-2 text-sm text-white'>{post.script}</p>
 
-      <div className="flex items-center justify-between">
-        <div className="flex flex-wrap gap-1">
+      <div className='flex items-center justify-between'>
+        <div className='flex flex-wrap gap-1'>
           {post.hashtags.slice(0, 3).map((tag) => (
-            <span
-              key={tag}
-              className="text-xs bg-gray-100 px-2 py-1 rounded"
-            >
+            <span key={tag} className='rounded text-purple-800 bg-purple-100 px-2 py-1 text-xs'>
               {tag}
             </span>
           ))}
         </div>
-        <div className="flex items-center space-x-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onView(post)}
-          >
+        <div className='flex items-center space-x-1'>
+          <Button variant='ghost' size='sm' onClick={() => onView(post)}>
             <Eye size={14} />
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onEdit(post)}
-          >
+          <Button variant='ghost' size='sm' onClick={() => onEdit(post)}>
             <Edit3 size={14} />
           </Button>
           <Button
-            variant="ghost"
-            size="sm"
+            variant='ghost'
+            size='sm'
             onClick={() => onDelete(post.id)}
-            className="text-red-600 hover:text-red-700"
+            className='text-red-600 hover:text-red-700'
           >
             <Trash2 size={14} />
           </Button>

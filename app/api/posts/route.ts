@@ -1,170 +1,276 @@
-// File: app/api/posts/route.ts
+// app/api/posts/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { ScheduledPost, APIResponse } from '@/types';
+import connectDB from '@/lib/mongodb';
+import Post, { IPost } from '@/models/Posts';
+import { z } from 'zod';
 
-// In-memory storage (replace with database in production)
-let posts: ScheduledPost[] = [
-  {
-    id: '1',
-    date: '2025-07-16',
-    time: '7:00 AM',
-    type: 'post',
-    format: 'carousel',
-    topic: 'Morning Routine Transformation',
-    script: '🌅 Transform your mornings with these game-changing habits!\n\n✨ Here\'s what works:\n1. Hydrate immediately (500ml water)\n2. 5-minute mindfulness practice\n3. Write down your top 3 priorities\n4. Move your body for 10 minutes\n5. Fuel up with protein-rich breakfast',
-    hashtags: ['#morningroutine', '#wellness', '#healthyhabits', '#productivity', '#selfcare'],
-    status: 'scheduled',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
+// Validation schema for creating/updating posts
+const postSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(100, 'Title must be less than 100 characters'),
+  description: z.string().max(500, 'Description must be less than 500 characters').optional(),
+  content: z.string().min(1, 'Content is required').max(2200, 'Content must be less than 2200 characters'),
+  caption: z.string().max(150, 'Caption must be less than 150 characters').optional(),
+  image: z.string().url('Invalid image URL').optional().or(z.literal('')),
+  hashtags: z.array(z.string()).max(30, 'Maximum 30 hashtags allowed').default([]),
+  suggestedTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format (HH:MM)').optional(),
+  contentPillars: z.array(z.string()).default([]),
+  callToAction: z.string().max(200, 'Call to action must be less than 200 characters').optional(),
+  visualDescription: z.string().max(1000, 'Visual description must be less than 1000 characters').optional(),
+  postType: z.enum(['image', 'video', 'carousel', 'reel', 'story']).default('image'),
+  format: z.enum(['educational', 'entertainment', 'promotional', 'inspirational', 'behind-the-scenes', 'user-generated']).default('educational'),
+  niche: z.string().max(100, 'Niche must be less than 100 characters').optional(),
+  audience: z.string().max(200, 'Audience must be less than 200 characters').optional(),
+  brandVoice: z.string().max(100, 'Brand voice must be less than 100 characters').optional(),
+  status: z.enum(['draft', 'scheduled', 'published', 'archived']).default('draft'),
+  scheduledDate: z.string().datetime().optional(),
+});
 
-// Utility function to safely update a post with proper type handling
-function updateScheduledPost(
-  existingPost: ScheduledPost,
-  updates: Partial<ScheduledPost>
-): ScheduledPost {
-  const result: ScheduledPost = {
-    // Required properties - always from existing or updates
-    id: existingPost.id,
-    date: updates.date ?? existingPost.date,
-    time: updates.time ?? existingPost.time,
-    type: updates.type ?? existingPost.type,
-    format: updates.format ?? existingPost.format,
-    topic: updates.topic ?? existingPost.topic,
-    script: updates.script ?? existingPost.script,
-    hashtags: updates.hashtags ?? existingPost.hashtags,
-    status: updates.status ?? existingPost.status,
-    createdAt: existingPost.createdAt,
-    updatedAt: new Date().toISOString(),
-  };
+// Bulk save schema for multiple posts
+const bulkPostSchema = z.object({
+  posts: z.array(postSchema).min(1, 'At least one post is required').max(10, 'Maximum 10 posts per request'),
+});
 
-  // Optional properties - only add if they exist in either existing or updates
-  if (updates.imageUrl !== undefined) {
-    result.imageUrl = updates.imageUrl;
-  } else if (existingPost.imageUrl !== undefined) {
-    result.imageUrl = existingPost.imageUrl;
-  }
+// Helper function to get user ID from request headers (set by middleware)
+const getUserIdFromRequest = (request: NextRequest): string | null => {
+  return request.headers.get('x-user-id');
+};
 
-  if (updates.videoUrl !== undefined) {
-    result.videoUrl = updates.videoUrl;
-  } else if (existingPost.videoUrl !== undefined) {
-    result.videoUrl = existingPost.videoUrl;
-  }
+// Response helpers
+const errorResponse = (message: string, status: number = 400) => {
+  return NextResponse.json(
+    { success: false, message, error: message },
+    { status }
+  );
+};
 
-  if (updates.engagementMetrics !== undefined) {
-    result.engagementMetrics = updates.engagementMetrics;
-  } else if (existingPost.engagementMetrics !== undefined) {
-    result.engagementMetrics = existingPost.engagementMetrics;
-  }
-
-  return result;
-}
-
-export async function GET() {
-  return NextResponse.json<APIResponse<ScheduledPost[]>>({
+const successResponse = (data: any, message: string = 'Success') => {
+  return NextResponse.json({
     success: true,
-    data: posts,
+    message,
+    data,
   });
+};
+
+// GET - Fetch user's posts
+export async function GET(request: NextRequest) {
+  try {
+    await connectDB();
+
+    const userId = getUserIdFromRequest(request);
+    if (!userId) {
+      return errorResponse('Authentication required', 401);
+    }
+
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const page = parseInt(searchParams.get('page') || '1');
+    const skip = (page - 1) * limit;
+
+    let query: any = { userId };
+    if (status && ['draft', 'scheduled', 'published', 'archived'].includes(status)) {
+      query.status = status;
+    }
+
+    const [posts, total] = await Promise.all([
+      Post.find(query)
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .skip(skip)
+        .populate('userId', 'name email'),
+      Post.countDocuments(query)
+    ]);
+
+    return successResponse({
+      posts,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      }
+    }, 'Posts retrieved successfully');
+
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+    return errorResponse('Failed to fetch posts', 500);
+  }
 }
 
+// POST - Create new post(s)
 export async function POST(request: NextRequest) {
   try {
+    await connectDB();
+
+    const userId = getUserIdFromRequest(request);
+    if (!userId) {
+      return errorResponse('Authentication required', 401);
+    }
+
     const body = await request.json();
-    const newPost: Omit<ScheduledPost, 'id' | 'createdAt' | 'updatedAt'> = body;
+    console.log('📝 Creating new post(s) for user:', userId);
 
-    const post: ScheduledPost = {
-      ...newPost,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    // Check if it's a bulk operation (array of posts) or single post
+    const isBulkOperation = Array.isArray(body.posts);
 
-    posts.push(post);
+    if (isBulkOperation) {
+      // Validate bulk posts
+      const validationResult = bulkPostSchema.safeParse(body);
+      if (!validationResult.success) {
+        const errors = validationResult.error.issues.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
+        return errorResponse(`Validation error: ${errors}`, 400);
+      }
 
-    return NextResponse.json<APIResponse<ScheduledPost>>({
-      success: true,
-      data: post,
-      message: 'Post scheduled successfully',
-    });
+      const { posts: postsData } = validationResult.data;
+
+      // Create multiple posts
+      const createdPosts = [];
+      for (const postData of postsData) {
+        const newPost = new Post({
+          ...postData,
+          userId,
+          scheduledDate: postData.scheduledDate ? new Date(postData.scheduledDate) : undefined,
+        });
+
+        const savedPost = await newPost.save();
+        createdPosts.push(savedPost);
+      }
+
+      console.log(`✅ Created ${createdPosts.length} posts for user:`, userId);
+
+      return successResponse(
+        { posts: createdPosts },
+        `${createdPosts.length} posts created successfully`
+      );
+
+    } else {
+      // Single post creation
+      const validationResult = postSchema.safeParse(body);
+      if (!validationResult.success) {
+        const errors = validationResult.error.issues.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
+        return errorResponse(`Validation error: ${errors}`, 400);
+      }
+
+      const postData = validationResult.data;
+
+      const newPost = new Post({
+        ...postData,
+        userId,
+        scheduledDate: postData.scheduledDate ? new Date(postData.scheduledDate) : undefined,
+      });
+
+      const savedPost = await newPost.save();
+
+      console.log('✅ Post created successfully:', savedPost._id);
+
+      return successResponse(
+        { post: savedPost },
+        'Post created successfully'
+      );
+    }
+
   } catch (error) {
     console.error('Error creating post:', error);
-    return NextResponse.json<APIResponse<null>>({
-      success: false,
-      error: 'Failed to schedule post',
-    }, { status: 500 });
+
+    if (error instanceof Error) {
+      if (error.name === 'ValidationError') {
+        return errorResponse(`Validation error: ${error.message}`, 400);
+      }
+      if (error.message.includes('E11000')) {
+        return errorResponse('Duplicate post detected', 409);
+      }
+    }
+
+    return errorResponse('Failed to create post', 500);
   }
 }
 
+// PUT - Update existing post
 export async function PUT(request: NextRequest) {
   try {
+    await connectDB();
+
+    const userId = getUserIdFromRequest(request);
+    if (!userId) {
+      return errorResponse('Authentication required', 401);
+    }
+
     const body = await request.json();
-    const { id, ...updates }: Partial<ScheduledPost> & { id: string } = body;
+    const { postId, ...updateData } = body;
 
-    const postIndex = posts.findIndex(post => post.id === id);
-    if (postIndex === -1) {
-      return NextResponse.json<APIResponse<null>>({
-        success: false,
-        error: 'Post not found',
-      }, { status: 404 });
+    if (!postId) {
+      return errorResponse('Post ID is required', 400);
     }
 
-    const existingPost = posts[postIndex];
-    if (!existingPost) {
-      return NextResponse.json<APIResponse<null>>({
-        success: false,
-        error: 'Post not found',
-      }, { status: 404 });
+    // Validate update data
+    const validationResult = postSchema.partial().safeParse(updateData);
+    if (!validationResult.success) {
+      const errors = validationResult.error.issues.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
+      return errorResponse(`Validation error: ${errors}`, 400);
     }
 
-    const updatedPost = updateScheduledPost(existingPost, updates);
-    posts[postIndex] = updatedPost;
+    const validatedData = validationResult.data;
 
-    return NextResponse.json<APIResponse<ScheduledPost>>({
-      success: true,
-      data: updatedPost,
-      message: 'Post updated successfully',
-    });
+    // Find and update the post (ensure user owns the post)
+    const updatedPost = await Post.findOneAndUpdate(
+      { _id: postId, userId },
+      {
+        ...validatedData,
+        scheduledDate: validatedData.scheduledDate ? new Date(validatedData.scheduledDate) : undefined,
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedPost) {
+      return errorResponse('Post not found', 404);
+    }
+
+    console.log('✅ Post updated successfully:', updatedPost._id);
+
+    return successResponse(
+      { post: updatedPost },
+      'Post updated successfully'
+    );
+
   } catch (error) {
     console.error('Error updating post:', error);
-    return NextResponse.json<APIResponse<null>>({
-      success: false,
-      error: 'Failed to update post',
-    }, { status: 500 });
+    return errorResponse('Failed to update post', 500);
   }
 }
 
+// DELETE - Delete post
 export async function DELETE(request: NextRequest) {
   try {
+    await connectDB();
+
+    const userId = getUserIdFromRequest(request);
+    if (!userId) {
+      return errorResponse('Authentication required', 401);
+    }
+
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    const postId = searchParams.get('postId');
 
-    if (!id) {
-      return NextResponse.json<APIResponse<null>>({
-        success: false,
-        error: 'Post ID is required',
-      }, { status: 400 });
+    if (!postId) {
+      return errorResponse('Post ID is required', 400);
     }
 
-    const postIndex = posts.findIndex(post => post.id === id);
-    if (postIndex === -1) {
-      return NextResponse.json<APIResponse<null>>({
-        success: false,
-        error: 'Post not found',
-      }, { status: 404 });
+    // Find and delete the post (ensure user owns the post)
+    const deletedPost = await Post.findOneAndDelete({ _id: postId, userId });
+
+    if (!deletedPost) {
+      return errorResponse('Post not found', 404);
     }
 
-    posts.splice(postIndex, 1);
+    console.log('✅ Post deleted successfully:', deletedPost._id);
 
-    return NextResponse.json<APIResponse<null>>({
-      success: true,
-      message: 'Post deleted successfully',
-    });
+    return successResponse(
+      { postId: deletedPost._id },
+      'Post deleted successfully'
+    );
+
   } catch (error) {
     console.error('Error deleting post:', error);
-    return NextResponse.json<APIResponse<null>>({
-      success: false,
-      error: 'Failed to delete post',
-    }, { status: 500 });
+    return errorResponse('Failed to delete post', 500);
   }
 }

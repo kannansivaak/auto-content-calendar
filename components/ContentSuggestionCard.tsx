@@ -1,9 +1,16 @@
 // File: components/ContentSuggestionCard.tsx
 'use client';
 
-import React from 'react';
-import { Camera, MessageSquare, Video, Clock, TrendingUp, Save } from 'lucide-react';
 import { ContentSuggestion } from '@/types';
+import {
+  Camera,
+  Clock,
+  MessageSquare,
+  Save,
+  TrendingUp,
+  Video,
+} from 'lucide-react';
+import React from 'react';
 import { Button } from './ui/Button';
 
 interface ContentSuggestionCardProps {
@@ -20,11 +27,11 @@ export const ContentSuggestionCard: React.FC<ContentSuggestionCardProps> = ({
   const getTypeIcon = () => {
     switch (suggestion.type) {
       case 'post':
-        return <Camera className="text-blue-500" size={20} />;
+        return <Camera className='text-purple-500' size={20} />;
       case 'story':
-        return <MessageSquare className="text-green-500" size={20} />;
+        return <MessageSquare className='text-green-500' size={20} />;
       case 'reel':
-        return <Video className="text-purple-500" size={20} />;
+        return <Video className='text-purple-500' size={20} />;
     }
   };
 
@@ -33,7 +40,7 @@ export const ContentSuggestionCard: React.FC<ContentSuggestionCardProps> = ({
       case 'Very High':
         return 'text-green-600';
       case 'High':
-        return 'text-blue-600';
+        return 'text-purple-600';
       case 'Medium':
         return 'text-yellow-600';
       case 'Low':
@@ -42,23 +49,23 @@ export const ContentSuggestionCard: React.FC<ContentSuggestionCardProps> = ({
   };
 
   return (
-    <div className="gradient text-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex items-center space-x-3">
+    <div className='gradient rounded-lg border p-6 text-white shadow-sm transition-shadow hover:shadow-md'>
+      <div className='mb-4 flex items-start justify-between'>
+        <div className='flex items-center space-x-3'>
           {getTypeIcon()}
           <div>
-            <h3 className="font-semibold text-white">{suggestion.topic}</h3>
-            <p className="text-sm text-white capitalize">
+            <h3 className='font-semibold text-white'>{suggestion.topic}</h3>
+            <p className='text-sm capitalize text-white'>
               {suggestion.format} • {suggestion.type}
             </p>
           </div>
         </div>
-        <div className="text-right">
-          <div className="flex items-center space-x-1 text-sm text-gray-600 mb-1">
+        <div className='text-right'>
+          <div className='mb-1 flex items-center space-x-1 text-sm text-gray-600'>
             <Clock size={14} />
             <span>{suggestion.suggestedTime}</span>
           </div>
-          <div className="flex items-center space-x-1 text-sm">
+          <div className='flex items-center space-x-1 text-sm'>
             <TrendingUp size={14} />
             <span className={getEngagementColor()}>
               {suggestion.expectedEngagement}
@@ -67,24 +74,24 @@ export const ContentSuggestionCard: React.FC<ContentSuggestionCardProps> = ({
         </div>
       </div>
 
-      <div className="gradient rounded-lg p-4 mb-4">
-        <p className="text-sm whitespace-pre-line text-white">
+      <div className='gradient mb-4 rounded-lg p-4'>
+        <p className='whitespace-pre-line text-sm text-white'>
           {suggestion.script}
         </p>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex flex-wrap gap-1">
+      <div className='flex items-center justify-between'>
+        <div className='flex flex-wrap gap-1'>
           {suggestion.hashtags.slice(0, 3).map((tag) => (
             <span
               key={tag}
-              className="text-xs bg-blue-100 text-white px-2 py-1 rounded"
+              className='rounded bg-purple-100 px-2 py-1 text-xs text-purple-800'
             >
               {tag}
             </span>
           ))}
           {suggestion.hashtags.length > 3 && (
-            <span className="text-xs text-gray-500">
+            <span className='text-xs text-gray-500'>
               +{suggestion.hashtags.length - 3} more
             </span>
           )}
@@ -92,7 +99,7 @@ export const ContentSuggestionCard: React.FC<ContentSuggestionCardProps> = ({
         <Button
           onClick={() => onSchedule(suggestion)}
           disabled={loading}
-          className="flex items-center space-x-2"
+          className='flex items-center space-x-2'
         >
           <Save size={16} />
           <span>Schedule</span>

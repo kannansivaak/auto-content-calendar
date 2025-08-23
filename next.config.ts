@@ -1,12 +1,16 @@
-// File: next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    appDir: true,
-  },
   images: {
     domains: ['instagram.com', 'cdninstagram.com'],
   },
-}
+  async rewrites() {
+    return [];
+  },
 
-module.exports = nextConfig
+  // Make sure API routes are not being redirected
+  async redirects() {
+    return [];
+  },
+};
+
+module.exports = nextConfig;

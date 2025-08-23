@@ -1,9 +1,9 @@
 // File: components/PostModal.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
 import { ScheduledPost } from '@/types';
+import { X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { Button } from './ui/Button';
 
 interface PostModalProps {
@@ -30,7 +30,9 @@ export const PostModal: React.FC<PostModalProps> = ({
     script: '',
     time: '12:00',
     hashtags: [] as string[],
-    date: selectedDate?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+    date:
+      selectedDate?.toISOString().split('T')[0] ||
+      new Date().toISOString().split('T')[0],
     status: 'scheduled' as 'draft' | 'scheduled' | 'published' | 'failed',
   });
 
@@ -50,7 +52,9 @@ export const PostModal: React.FC<PostModalProps> = ({
       });
       setHashtagInput(post.hashtags.join(', '));
     } else if (mode === 'create') {
-      const currentDate = selectedDate?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0];
+      const currentDate =
+        selectedDate?.toISOString().split('T')[0] ||
+        new Date().toISOString().split('T')[0];
       setFormData({
         topic: '',
         type: 'post',
@@ -70,9 +74,9 @@ export const PostModal: React.FC<PostModalProps> = ({
 
     const hashtags = hashtagInput
       .split(',')
-      .map(tag => tag.trim())
-      .filter(tag => tag.length > 0)
-      .map(tag => tag.startsWith('#') ? tag : `#${tag}`);
+      .map((tag) => tag.trim())
+      .filter((tag) => tag.length > 0)
+      .map((tag) => (tag.startsWith('#') ? tag : `#${tag}`));
 
     const timeFormatted = formatTime(formData.time);
 
@@ -105,55 +109,54 @@ export const PostModal: React.FC<PostModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">
+    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50'>
+      <div className='max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg glass-sidebar p-6'>
+        <div className='mb-4 flex items-center justify-between'>
+          <h3 className='text-lg font-semibold'>
             {mode === 'create' && 'Create New Post'}
             {mode === 'edit' && 'Edit Post'}
             {mode === 'view' && 'Post Details'}
           </h3>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-white"
-          >
+          <button onClick={onClose} className='text-gray-500 hover:text-white'>
             <X size={20} />
           </button>
         </div>
 
         {mode === 'view' ? (
-          <div className="space-y-4">
+          <div className='space-y-4'>
             <div>
-              <h4 className="font-medium mb-2">Topic</h4>
-              <p className="text-white">{post?.topic}</p>
+              <h4 className='mb-2 font-medium'>Topic</h4>
+              <p className='text-white'>{post?.topic}</p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className='grid grid-cols-2 gap-4'>
               <div>
-                <h4 className="font-medium mb-2">Type</h4>
-                <p className="text-white capitalize">{post?.type}</p>
+                <h4 className='mb-2 font-medium'>Type</h4>
+                <p className='capitalize text-white'>{post?.type}</p>
               </div>
               <div>
-                <h4 className="font-medium mb-2">Format</h4>
-                <p className="text-white capitalize">{post?.format}</p>
+                <h4 className='mb-2 font-medium'>Format</h4>
+                <p className='capitalize text-white'>{post?.format}</p>
               </div>
             </div>
             <div>
-              <h4 className="font-medium mb-2">Scheduled Time</h4>
-              <p className="text-white">{post?.date} at {post?.time}</p>
+              <h4 className='mb-2 font-medium'>Scheduled Time</h4>
+              <p className='text-white'>
+                {post?.date} at {post?.time}
+              </p>
             </div>
             <div>
-              <h4 className="font-medium mb-2">Script</h4>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="whitespace-pre-line">{post?.script}</p>
+              <h4 className='mb-2 font-medium'>Script</h4>
+              <div className='rounded-lg bg-gray-50 p-4'>
+                <p className='whitespace-pre-line'>{post?.script}</p>
               </div>
             </div>
             <div>
-              <h4 className="font-medium mb-2">Hashtags</h4>
-              <div className="flex flex-wrap gap-2">
+              <h4 className='mb-2 font-medium'>Hashtags</h4>
+              <div className='flex flex-wrap gap-2'>
                 {post?.hashtags.map((tag) => (
                   <span
                     key={tag}
-                    className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm"
+                    className='rounded bg-purple-100 px-2 py-1 text-sm text-purple-800'
                   >
                     {tag}
                   </span>
@@ -162,101 +165,115 @@ export const PostModal: React.FC<PostModalProps> = ({
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className='space-y-4'>
             <div>
-              <label className="block text-sm font-medium mb-2">Topic</label>
+              <label className='mb-2 block text-sm font-medium'>Topic</label>
               <input
-                type="text"
+                type='text'
                 value={formData.topic}
-                onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
-                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter post topic"
+                onChange={(e) =>
+                  setFormData({ ...formData, topic: e.target.value })
+                }
+                className='w-full rounded-lg border p-2 focus:border-purple-500 focus:ring-2 glass-effect focus:ring-purple-500'
+                placeholder='Enter post topic'
                 required
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className='grid grid-cols-2 gap-4'>
               <div>
-                <label className="block text-sm font-medium mb-2">Type</label>
+                <label className='mb-2 block text-sm font-medium'>Type</label>
                 <select
                   value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value as 'post' | 'story' | 'reel' })}
-                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      type: e.target.value as 'post' | 'story' | 'reel',
+                    })
+                  }
+                  className='w-full rounded-lg border p-2 focus:border-purple-500 glass-effect focus:ring-2 focus:ring-purple-500'
                 >
-                  <option value="post">Post</option>
-                  <option value="story">Story</option>
-                  <option value="reel">Reel</option>
+                  <option value='post'>Post</option>
+                  <option value='story'>Story</option>
+                  <option value='reel'>Reel</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Format</label>
+                <label className='mb-2 block text-sm font-medium'>Format</label>
                 <select
                   value={formData.format}
-                  onChange={(e) => setFormData({ ...formData, format: e.target.value as 'image' | 'video' | 'carousel' })}
-                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      format: e.target.value as 'image' | 'video' | 'carousel',
+                    })
+                  }
+                  className='w-full rounded-lg border p-2 focus:border-purple-500 glass-effect focus:ring-2 focus:ring-purple-500'
                 >
-                  <option value="image">Image</option>
-                  <option value="video">Video</option>
-                  <option value="carousel">Carousel</option>
+                  <option value='image'>Image</option>
+                  <option value='video'>Video</option>
+                  <option value='carousel'>Carousel</option>
                 </select>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className='grid grid-cols-2 gap-4'>
               <div>
-                <label className="block text-sm font-medium mb-2">Date</label>
+                <label className='mb-2 block text-sm font-medium'>Date</label>
                 <input
-                  type="date"
+                  type='date'
                   value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onChange={(e) =>
+                    setFormData({ ...formData, date: e.target.value })
+                  }
+                  className='w-full rounded-lg border p-2 focus:border-purple-500 glass-effect focus:ring-2 focus:ring-purple-500'
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Time</label>
+                <label className='mb-2 block text-sm font-medium'>Time</label>
                 <input
-                  type="time"
+                  type='time'
                   value={formData.time}
-                  onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                  className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onChange={(e) =>
+                    setFormData({ ...formData, time: e.target.value })
+                  }
+                  className='w-full rounded-lg border p-2 focus:border-purple-500 glass-effect focus:ring-2 focus:ring-purple-500'
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Script</label>
+              <label className='mb-2 block text-sm font-medium'>Script</label>
               <textarea
                 value={formData.script}
-                onChange={(e) => setFormData({ ...formData, script: e.target.value })}
-                className="w-full p-2 border rounded-lg h-32 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Write your post script here..."
+                onChange={(e) =>
+                  setFormData({ ...formData, script: e.target.value })
+                }
+                className='h-32 w-full rounded-lg border p-2 focus:border-purple-500 glass-effect focus:ring-2 focus:ring-purple-500'
+                placeholder='Write your post script here...'
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Hashtags</label>
+              <label className='mb-2 block text-sm font-medium'>Hashtags</label>
               <input
-                type="text"
+                type='text'
                 value={hashtagInput}
                 onChange={(e) => setHashtagInput(e.target.value)}
-                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter hashtags separated by commas (e.g., fitness, wellness, motivation)"
+                className='w-full rounded-lg border p-2 focus:border-purple-500 glass-effect focus:ring-2 focus:ring-purple-500'
+                placeholder='Enter hashtags separated by commas (e.g., fitness, wellness, motivation)'
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className='mt-1 text-xs text-gray-500'>
                 Separate hashtags with commas. # will be added automatically.
               </p>
             </div>
 
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-              >
+            <div className='flex justify-end space-x-2 pt-4'>
+              <Button type='button' variant='outline' onClick={onClose}>
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button type='submit'>
                 {mode === 'create' ? 'Schedule Post' : 'Update Post'}
               </Button>
             </div>
@@ -264,7 +281,7 @@ export const PostModal: React.FC<PostModalProps> = ({
         )}
 
         {mode === 'view' && (
-          <div className="flex justify-end pt-4">
+          <div className='flex justify-end pt-4'>
             <Button onClick={onClose}>Close</Button>
           </div>
         )}
