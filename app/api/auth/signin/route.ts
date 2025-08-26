@@ -88,27 +88,27 @@ const validatePassword = async (password: string, hashedPassword: string): Promi
 };
 
 // Rate limiting helper (In production, use Redis or external service)
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+// const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
-const checkRateLimit = (ip: string): boolean => {
-  const now = Date.now();
-  const windowMs = 15 * 60 * 1000; // 15 minutes
-  const maxAttempts = 5; // 5 attempts per window
+// const checkRateLimit = (ip: string): boolean => {
+//   const now = Date.now();
+//   const windowMs = 15 * 60 * 1000; // 15 minutes
+//   const maxAttempts = 5; // 5 attempts per window
 
-  const record = rateLimitMap.get(ip);
+//   const record = rateLimitMap.get(ip);
 
-  if (!record || now > record.resetTime) {
-    rateLimitMap.set(ip, { count: 1, resetTime: now + windowMs });
-    return true;
-  }
+//   if (!record || now > record.resetTime) {
+//     rateLimitMap.set(ip, { count: 1, resetTime: now + windowMs });
+//     return true;
+//   }
 
-  if (record.count >= maxAttempts) {
-    return false;
-  }
+//   if (record.count >= maxAttempts) {
+//     return false;
+//   }
 
-  record.count++;
-  return true;
-};
+//   record.count++;
+//   return true;
+// };
 
 // Helper function to format user response
 const formatUserResponse = (user: IUser): UserResponse => {

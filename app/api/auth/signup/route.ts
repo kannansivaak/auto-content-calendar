@@ -85,27 +85,27 @@ const generateTokens = (userId: string) => {
 };
 
 // Rate limiting
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+// const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
-const checkRateLimit = (ip: string): boolean => {
-  const now = Date.now();
-  const windowMs = 15 * 60 * 1000; // 15 minutes
-  const maxAttempts = 3;
+// const checkRateLimit = (ip: string): boolean => {
+//   const now = Date.now();
+//   const windowMs = 15 * 60 * 1000; // 15 minutes
+//   const maxAttempts = 3;
 
-  const record = rateLimitMap.get(ip);
+//   const record = rateLimitMap.get(ip);
 
-  if (!record || now > record.resetTime) {
-    rateLimitMap.set(ip, { count: 1, resetTime: now + windowMs });
-    return true;
-  }
+//   if (!record || now > record.resetTime) {
+//     rateLimitMap.set(ip, { count: 1, resetTime: now + windowMs });
+//     return true;
+//   }
 
-  if (record.count >= maxAttempts) {
-    return false;
-  }
+//   if (record.count >= maxAttempts) {
+//     return false;
+//   }
 
-  record.count++;
-  return true;
-};
+//   record.count++;
+//   return true;
+// };
 
 const commonWeakPasswords = [
   'password', '123456', '12345678', 'qwerty', 'abc123', 'password123',
@@ -128,25 +128,25 @@ const formatUserResponse = (user: IUser) => {
   };
 };
 
-const sendVerificationEmail = async (
-  email: string,
-  name: string,
-  verificationToken: string
-): Promise<void> => {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
+// const sendVerificationEmail = async (
+//   email: string,
+//   name: string,
+//   verificationToken: string
+// ): Promise<void> => {
+//   try {
+//     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+//     const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
 
-    console.log(`📧 Verification email for ${email}`);
-    console.log(`🔗 Verification URL: ${verificationUrl}`);
-    console.log(`👤 Name: ${name}`);
+//     console.log(`📧 Verification email for ${email}`);
+//     console.log(`🔗 Verification URL: ${verificationUrl}`);
+//     console.log(`👤 Name: ${name}`);
 
-    // TODO: Implement actual email service
-  } catch (error) {
-    console.error('❌ Failed to send verification email:', error);
-    throw new Error('Email service unavailable');
-  }
-};
+//     // TODO: Implement actual email service
+//   } catch (error) {
+//     console.error('❌ Failed to send verification email:', error);
+//     throw new Error('Email service unavailable');
+//   }
+// };
 
 // Response helpers
 const errorResponse = (message: string, status: number = 400) => {
