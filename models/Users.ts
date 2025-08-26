@@ -85,7 +85,8 @@ const UserSchema: Schema<IUser> = new Schema(
   {
     timestamps: true, // Automatically adds createdAt and updatedAt
     toJSON: {
-      transform: function(doc, ret) {
+      transform: function(doc, ret: any) {
+        console.log("🚀 ~ doc:", doc)
         // Remove sensitive fields from JSON output
         const { password, verificationToken, originalPassword, ...safeUser } = ret;
         return safeUser;

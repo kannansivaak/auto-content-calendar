@@ -1,7 +1,7 @@
 // app/api/posts/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import Post, { IPost } from '@/models/Posts';
+import Post from '@/models/Posts';
 import { z } from 'zod';
 
 // Validation schema for creating/updating posts
